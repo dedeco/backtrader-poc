@@ -22,7 +22,7 @@ def run():
             #logger.info("Funds: %s" % ws.funds())
         #logger.info("Market Depth: %s" % ws.market_depth())
         #logger.info("Recent Trades: %s\n\n" % ws.recent_trades())
-        sleep(5)
+        sleep(1)
 
 def setup_logger():
     logger = logging.getLogger()
