@@ -27,6 +27,11 @@ class TestStrategy(bt.Strategy):
 
         self.counter += 1
 
+        sma1, sma2 = bt.ind.SMA(period=1), bt.ind.SMA(period=2)
+        print (sma1.data,'sma1 ************')
+        print (sma2.data,'sma2 ************')
+
+
         print('*' * 5, 'NEXT data0:', bt.num2date(self.data0.datetime[0]),
               self.data0._name, self.data0.open[0], self.data0.high[0],
               self.data0.low[0], self.data0.close[0], self.data0.volume[0],
@@ -38,8 +43,14 @@ class TestStrategy2(bt.Strategy):
         for data in self.datas:
 
             print (data.datetime[0], '$$$$$$$$$$$$$$$$')
+
+            #print (self._data, '$$$$$$$$$$$$$')
+
             #print (data.datetime[1], '$$$$$$$$$$$$$$$$')
-            print (data.datetime[-1], '$$$$$$$$$$$$$$$$')
+            #print (data.datetime[-1], '$$$$$$$$$$$$$$$$')
+            #print (dir(data), '$$$$$$$$$$$$$$$$')
+            #print (data.__prev__().datetime[-1], '$$$$$$$$$$$$$$$$')
+            
 
             print('*' * 5, 'NEXT:', bt.num2date(data.datetime[0]), data._name, data.open[0], data.high[0],
                   data.low[0], data.close[0], data.volume[0],
@@ -48,6 +59,61 @@ class TestStrategy2(bt.Strategy):
             #    order = self.buy(data, exectype=bt.Order.Limit, size=10, price=data.close[0])
             #else:
             #    order = self.sell(data, exectype=bt.Order.Limit, size=10, price=data.close[0])
+
+    def notify_order(self, order):
+        print('*' * 5, "NOTIFY ORDER", order)
+
+class SmaCross(bt.SignalStrategy):
+
+    def start(self):
+        self.counter = 0
+        print('START')
+
+    def prenext(self):
+        self.counter += 1
+        print('prenext len %d - counter %d' % (len(self), self.counter))
+
+    params = (('pfast', 1), ('pslow', 2),)
+    def __init__(self):
+        sma1, sma2 = bt.ind.SMA(period=self.p.pfast), bt.ind.SMA(period=self.p.pslow)
+        print (sma1.data,'sma1 ************')
+        print (sma2.data,'sma2 ************')
+
+
+        #self.signal_add(bt.SIGNAL_LONG, bt.ind.CrossOver(sma1, sma2))
+        #self.signal_add(bt.SIGNAL_SHORT, bt.ind.CrossOver(sma2,sma1))
+
+    def next(self):
+        print('------ next len %d - counter %d' % (len(self), self.counter))
+
+        self.counter += 1
+
+        print('*' * 5, 'NEXT data0:', bt.num2date(self.data0.datetime[0]),
+              self.data0._name, self.data0.open[0], self.data0.high[0],
+              self.data0.low[0], self.data0.close[0], self.data0.volume[0],
+              bt.TimeFrame.getname(self.data0._timeframe), len(self.data0))
+
+    def notify_order(self, order):
+        print('*' * 5, "NOTIFY ORDER", order)
+
+class TestStrategy3(bt.Strategy):
+    
+    def __init__(self):
+        print('ˆˆˆˆˆ')
+        self.sma2= bt.ind.SimpleMovingAverage(self.data, period=2)
+    
+    def next(self):
+        for data in self.datas:
+            print('*' * 5, 'NEXT:', bt.num2date(data.datetime[0]), data._name, data.open[0], data.high[0],
+                  data.low[0], data.close[0], data.volume[0],
+                  bt.TimeFrame.getname(data._timeframe), len(data))
+            if not self.getposition(data) and data.close[0] > self.sma2[0]:
+                print('Hora de comprar')
+                print('close[0]',data.close[0],'sma2[0]',self.sma2[0])
+                order = self.buy(data, exectype=bt.Order.Market, size=10)
+            elif self.getposition(data) and data.close[0] < self.sma2[0]:
+                print('Hora de vender')
+                order = self.sell(data, exectype=bt.Order.Market, size=10)
 
     def notify_order(self, order):
         print('*' * 5, "NOTIFY ORDER", order)
@@ -79,6 +145,6 @@ if __name__ == '__main__':
 
     cerebro.adddata(data)
 
-    cerebro.addstrategy(TestStrategy2)
-    cerebro.run()
-    #cerebro.plot()
+    cerebro.addstrategy(TestStrategy3)
+    cerebro.run(runonce=False, live=True)
+    cerebro.plot()
