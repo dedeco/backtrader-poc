@@ -27,7 +27,7 @@ parsimonious==0.8.0
 pycares==2.3.0
 pycryptodome==3.6.6
 pyee==5.0.0
-requests==2.19.1
+requests==2.20.0
 rlp==1.0.2
 semver==2.8.1
 six==1.11.0
